@@ -26,7 +26,7 @@ int device_0_pin = 8;
 #define I2 7  // Control pin 2 for motor 1
 
 // device_id = 1 ---> turn
-// value ---> -30 .. 0 .. 30
+// value ---> -32 .. 0 .. 32
 int device_1_pin = 9;
 Servo device_1;
 
@@ -82,7 +82,8 @@ void loop()
        digitalWrite(I2, HIGH);        
       }
     } else if (pack.device_id == 1) {
-      device_1.write((30+pack.value)*3);
+      // TURN
+      device_1.write((32+pack.value)*3);
     }
     
   }
