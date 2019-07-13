@@ -21,20 +21,21 @@ c_pack pack;
 
 // device_id = 0 ---> speed.
 // value ---> -32 .. 0 .. 32
-int device_0_pin = 8;
-#define E1 10 // Enable Pin for motor 1
-#define I1 6  // Control pin 1 for motor 1
-#define I2 7  // Control pin 2 for motor 1
+#define I1 3  // Control pin 1 for motor 1 - DIGITAL
+#define I2 4  // Control pin 2 for motor 1 - DIGITAL
+#define E1 5  // Enable Pin for motor 1    - ANALOG    (PWM)
 
 // device_id = 1 ---> turn
 // value ---> -32 .. 0 .. 32
-int device_1_pin = 9;
+int device_1_pin = 6; //                     DIGITAL  (PWM)
 Servo device_1;
+
 
 void setup()
 {
-  while (!Serial);
-    Serial.begin(9600);
+  //---------------- DEBUG ---------------------------
+  //while (!Serial);
+  //  Serial.begin(9600);
   // --------------- CONFIGURE DEVICE_0 --------------- 
   pinMode(E1, OUTPUT);
   pinMode(I1, OUTPUT);
