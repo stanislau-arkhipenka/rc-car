@@ -16,7 +16,8 @@ struct c_pack {
  int device_id;
  int value;
 };
-
+c_pack pack;
+#define LED 13 // PIN TO SHOW Received package
 
 // device_id = 0 ---> speed.
 // value ---> -32 .. 0 .. 32
@@ -58,7 +59,7 @@ void loop()
   //Read the data if available in buffer
   if (radio.available())
   {
-    c_pack pack;
+    digitalWrite(LED, HIGH);
     radio.read(&pack, sizeof(pack));
     //Serial.println(pack.device_id);
     //Serial.println(pack.value);
@@ -85,6 +86,6 @@ void loop()
       // TURN
       device_1.write((32+pack.value)*3);
     }
-    
+    digitalWrite(LED, LOW);
   }
 }
