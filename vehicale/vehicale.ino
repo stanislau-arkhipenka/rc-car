@@ -6,17 +6,17 @@
 
 //create an RF24 object
 RF24 radio(9, 8);  // CE, CSN
+#define RF_POWER RF24_PA_LOW
 
 //address through which two modules communicate.
-const byte address[6] = "00111";
+const byte addresses[][6] = {"veh01","con01"};
 
 
 // package structure
 struct c_pack {
  int device_id;
  int value;
-};
-c_pack pack;
+} pack;
 #define LED 13 // PIN TO SHOW Received package
 
 // device_id = 0 ---> speed.
@@ -34,8 +34,7 @@ Servo device_1;
 void setup()
 {
   //---------------- DEBUG ---------------------------
-  //while (!Serial);
-  //  Serial.begin(9600);
+  Serial.begin(9600);
   // --------------- CONFIGURE DEVICE_0 --------------- 
   pinMode(E1, OUTPUT);
   pinMode(I1, OUTPUT);
@@ -47,9 +46,10 @@ void setup()
   
   // --------------- CONFIGURE RADIO --------------- 
   radio.begin();
-  
+  radio.setPALevel(RF_POWER);
   //set the address
-  radio.openReadingPipe(0, address);
+  radio.openWritingPipe(addresses[0]);   //write pipe as veh01
+  radio.openReadingPipe(1,addresses[1]); //read pipe from con01
   
   //Set module as receiver
   radio.startListening();
@@ -61,7 +61,10 @@ void loop()
   if (radio.available())
   {
     digitalWrite(LED, HIGH);
-    radio.read(&pack, sizeof(pack));
+    while(radio.available())
+    {
+      radio.read(&pack, sizeof(pack));
+    }
     //Serial.println(pack.device_id);
     //Serial.println(pack.value);
     if(pack.device_id == 0) {

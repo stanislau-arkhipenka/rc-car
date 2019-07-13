@@ -16,41 +16,47 @@ int buttons[] = {UP_BTN, DOWN_BTN, LEFT_BTN, RIGHT_BTN, E_BTN, F_BTN, JOYSTICK_B
 
 //create an RF24 object
 RF24 radio(9, 10);  // CE, CSN
+#define RF_POWER RF24_PA_LOW
 
 //address through which two modules communicate.
-const byte address[6] = "00111";
+const byte addresses[][6] = {"veh01","con01"};
 
 // package structure
 struct c_pack {
  int device_id;
  int value;
-};
+} pack;
 
 void setup()
 {
+  // ------------ DEBUG ---------------------------
+  Serial.begin(9600);
   
-  // SETUP RADIO
+  //------------ SETUP RADIO ----------------------
   radio.begin();
+  radio.setPALevel(RF24_PA_LOW);
   //set the address
-  radio.openWritingPipe(address);
-  //Set module as transmitter
+  radio.openWritingPipe(addresses[1]);
+  radio.openReadingPipe(1,addresses[0]);
   radio.stopListening();
   
   
-  // SETUP PINS
+  //------------ SETUP PINS ------------------------
   for (int i; i < 7; i++)  pinMode(buttons[i], INPUT_PULLUP);
 }
 void loop()
 {
-  c_pack speed_pack;
-  speed_pack.device_id = 0;
-  speed_pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/32) + (digitalRead(UP_BTN) ? 16 : 0) + (digitalRead(DOWN_BTN) ? -16 : 0);
-  radio.write(&speed_pack, sizeof(speed_pack));
+  pack.device_id = 0;
+  pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/32) + (digitalRead(UP_BTN) ? 16 : 0) + (digitalRead(DOWN_BTN) ? -16 : 0);
+  if(!radio.write(&pack, sizeof(pack))) {
+    Serial.println("failed speed control");
+  }
   delay(25);
-  c_pack turn_pack;
-  turn_pack.device_id = 1;
-  turn_pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/16);
-  radio.write(&turn_pack, sizeof(turn_pack));
+  pack.device_id = 1;
+  pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/16);
+  if(!radio.write(&pack, sizeof(pack))) {
+    Serial.println("failed turn control");
+  }
   delay(25);
 
 
