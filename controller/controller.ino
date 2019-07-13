@@ -15,7 +15,7 @@ int const JOYSTICK_AXIS_Y = A1;
 int buttons[] = {UP_BTN, DOWN_BTN, LEFT_BTN, RIGHT_BTN, E_BTN, F_BTN, JOYSTICK_BTN};
 
 //create an RF24 object
-RF24 radio(9, 8);  // CE, CSN
+RF24 radio(9, 10);  // CE, CSN
 
 //address through which two modules communicate.
 const byte address[6] = "00111";
@@ -46,12 +46,12 @@ void loop()
   speed_pack.device_id = 0;
   speed_pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/32) + (digitalRead(UP_BTN) ? 16 : 0) + (digitalRead(DOWN_BTN) ? -16 : 0);
   radio.write(&speed_pack, sizeof(speed_pack));
-  delay(10);
+  delay(25);
   c_pack turn_pack;
   turn_pack.device_id = 1;
   turn_pack.value = round((analogRead(JOYSTICK_AXIS_X)-512)/16);
   radio.write(&turn_pack, sizeof(turn_pack));
-  delay(10);
+  delay(25);
 
 
 }
