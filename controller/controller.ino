@@ -2,6 +2,13 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
 #define UP_BTN          2 // 0
 #define DOWN_BTN        4 // 1
@@ -35,6 +42,8 @@ RF24 radio(9, 10);  // CE, CSN
 const byte addresses[][6] = {"veh01","con01"};
 
 int channel = 0;
+int x_val = 0;
+int y_val = 0;
 
 // package structure
 struct c_pack {
@@ -42,6 +51,8 @@ struct c_pack {
  int value;
 } pack;
 
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 bool button_clicked(int button_id)
 {
@@ -63,6 +74,14 @@ void send_data() {
   radio.write(&pack, sizeof(pack));
 }
 
+void draw_display() {
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.print("chan: "); display.println(channel);
+  display.print("X:"); display.print(x_val); display.print("Y:"); display.println(y_val);
+  display.display();
+
+}
 
 void loop_channel(int direction) {
   channel += direction;
@@ -85,20 +104,27 @@ void setup()
   radio.setChannel(channel);
   radio.stopListening();
 
-
   //------------ SETUP PINS ------------------------
   for (int i; i < 7; i++)  pinMode(buttons[i], INPUT_PULLUP);
+
+  //------------ SETUP DISPLAY --------------------
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  draw_display();
 }
 
 void loop()
 {
-
+  x_val = read_joy(JOYSTICK_AXIS_X, JOY_X_CORRECTION_OFFSET, JOY_X_THRESHOLD);
+  y_val = read_joy(JOYSTICK_AXIS_Y, JOY_Y_CORRECTION_OFFSET, JOY_X_THRESHOLD);
   pack.device_id = 7;
-  pack.value = read_joy(JOYSTICK_AXIS_X, JOY_X_CORRECTION_OFFSET, JOY_X_THRESHOLD);
+  pack.value = x_val;
   send_data();
   delay(10);
   pack.device_id = 8;
-  pack.value = read_joy(JOYSTICK_AXIS_Y, JOY_Y_CORRECTION_OFFSET, JOY_X_THRESHOLD);
+  pack.value = y_val;
   send_data();
   delay(10);
 
@@ -116,4 +142,5 @@ void loop()
   else if(button_clicked(5)) {  // BTN_E
     loop_channel(1);
   }
+  draw_display();
 }
