@@ -7,6 +7,7 @@ This project consists of three main "parts":
 * Debugging
 
 ## Controller
+[Mode details and STL files](https://zzbot.org/projects/remote-controller/)
 ### Hardware
 To build controller you need following components:
 * Arduino Uno
