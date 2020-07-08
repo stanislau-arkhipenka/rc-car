@@ -24,12 +24,6 @@
 // ---------- CONFIGURATION ----------
 #define RF_POWER RF24_PA_LOW // TRANSMISSION POWER. Possible values: RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 
-#define JOY_X_CORRECTION_OFFSET 100 // variables to compensate drift in joystick shield hardware (due imperfection of manufacturing)
-#define JOY_Y_CORRECTION_OFFSET 100 // variables to compensate drift in joystick shield hardware (due imperfection of manufacturing)
-
-#define JOY_X_THRESHOLD 1  // if output value less or equal to this threshold - it will be set to 0
-#define JOY_Y_THRESHOLD 1  // if output value less or equal to this threshold - it will be set to 0
-
 // --------- END CONFIGURATION ---------
 
 int buttons[] = {UP_BTN, DOWN_BTN, LEFT_BTN, RIGHT_BTN, JOYSTICK_BTN, BTN_E, BTN_F};      // map buttons to ids
@@ -41,14 +35,26 @@ RF24 radio(9, 10);  // CE, CSN
 //address through which two modules communicate.
 const byte addresses[][6] = {"veh01","con01"};
 
+
+// --------- RUNTIME CONFIGS ------------
 int channel = 0;
 int x_val = 0;
 int y_val = 0;
 
+int calibr_conf_x[3] = {0,0,0}; // center, min, max
+int calibr_conf_y[3] = {0,0,0}; // center, min, max
+
+int mode = 0; // 0 - calibration, 1 - operation
+
 // package structure
 struct c_pack {
- int device_id;
- int value;
+ byte b_up;
+ byte b_down;
+ byte b_left;
+ byte b_right;
+ byte b_joy;
+ int joy_x;
+ int joy_y;
 } pack;
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
@@ -58,15 +64,21 @@ bool button_clicked(int button_id)
 {
     if (button_states[button_id] != digitalRead(buttons[button_id])) {
       button_states[button_id] = digitalRead(buttons[button_id]);
-      return true;
+      if (digitalRead(buttons[button_id]) == LOW) {
+        return true;
+      }
     }
     return false;
 }
 
-int read_joy(int joy_id, int offset=0, int threshold=0) {
-  int out = round((analogRead(joy_id)+offset-512)/32);
+int raw_read_joy(int joy_id)
+{
+  return analogRead(joy_id)-512;
+}
+
+int read_joy(int joy_id, int joy_conf[3]) {
+  int out = map(raw_read_joy(joy_id)-joy_conf[0],joy_conf[1],joy_conf[2],-32,32);
   //int out = analogRead(joy_id);  //for debug purposes
-  if(abs(out) <= threshold) return 0;
   return out;
 }
   
@@ -97,7 +109,7 @@ void setup()
 {
   //------------ SETUP RADIO ----------------------
   radio.begin();
-  radio.setPALevel(RF24_PA_LOW);
+  radio.setPALevel(RF_POWER);
   //set the address
   radio.openWritingPipe(addresses[1]);
   radio.openReadingPipe(1,addresses[0]);
@@ -112,35 +124,86 @@ void setup()
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  draw_display();
+
 }
 
 void loop()
 {
-  x_val = read_joy(JOYSTICK_AXIS_X, JOY_X_CORRECTION_OFFSET, JOY_X_THRESHOLD);
-  y_val = read_joy(JOYSTICK_AXIS_Y, JOY_Y_CORRECTION_OFFSET, JOY_X_THRESHOLD);
-  pack.device_id = 7;
-  pack.value = x_val;
-  send_data();
-  delay(10);
-  pack.device_id = 8;
-  pack.value = y_val;
-  send_data();
-  delay(10);
+  if (mode == 0) {
+    calibrate();
+  }
+  else
+  {
+    x_val = read_joy(JOYSTICK_AXIS_X, calibr_conf_x);
+    y_val = read_joy(JOYSTICK_AXIS_Y, calibr_conf_y);
+    pack.b_up = digitalRead(UP_BTN);
+    pack.b_down = digitalRead(DOWN_BTN);
+    pack.b_left = digitalRead(LEFT_BTN);
+    pack.b_right = digitalRead(RIGHT_BTN);
+    pack.b_joy = digitalRead(JOYSTICK_BTN);
+    pack.joy_x = x_val;
+    pack.joy_y = y_val;
+    
+    send_data();
+    delay(10);
+  
+    if(button_clicked(6)) {
+      loop_channel(-1);
+    }
+    else if(button_clicked(5)) {
+      loop_channel(1);
+    }
+    draw_display();
+  }
+}
 
-  for(int i=0;i<5;i++)
-    if(button_clicked(i)) {
-      pack.device_id = i;
-      pack.value = button_states[i];
-      send_data();
-      delay(10);
+
+void calibrate()
+{
+  bool tmp_b = true;
+  while(tmp_b) {
+      calibr_conf_x[0] = raw_read_joy(JOYSTICK_AXIS_X);
+      calibr_conf_y[0] = raw_read_joy(JOYSTICK_AXIS_Y);
+    if (button_clicked(0))
+      tmp_b = false;
+
+    if (button_clicked(3)) { // cancel calibration
+      calibr_conf_x[1] = -512;
+      calibr_conf_y[1] = -512;
+      calibr_conf_x[2] = 512;
+      calibr_conf_y[2] = 512;
+      mode = 1;
+      return;
     }
 
-  if(button_clicked(6)) { // BTN_F
-    loop_channel(-1);
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.println("CENTER");
+    display.println("A ok, B no");
+    display.print(raw_read_joy(JOYSTICK_AXIS_X)); display.print(", "); display.println(raw_read_joy(JOYSTICK_AXIS_Y));
+    display.display();
   }
-  else if(button_clicked(5)) {  // BTN_E
-    loop_channel(1);
+  tmp_b = true;
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println("MAX VALUES");
+  display.println("A - ok");
+  display.display();
+  while(tmp_b) {
+    if (button_clicked(0))
+      tmp_b = false;
+      x_val = raw_read_joy(JOYSTICK_AXIS_X);
+      y_val = raw_read_joy(JOYSTICK_AXIS_Y);
+
+      if (calibr_conf_x[1] > x_val)
+        calibr_conf_x[1] = x_val;
+      if (calibr_conf_x[2] < x_val)
+        calibr_conf_x[2] = x_val;
+      if (calibr_conf_y[1] > y_val)
+        calibr_conf_y[1] = y_val;
+      if (calibr_conf_y[2] < y_val)
+        calibr_conf_y[2] = y_val; 
   }
-  draw_display();
+  mode = 1;
+  
 }
