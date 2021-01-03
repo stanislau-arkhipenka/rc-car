@@ -48,11 +48,11 @@ int mode = 0; // 0 - calibration, 1 - operation
 
 // package structure
 struct c_pack {
- byte b_up;
- byte b_down;
- byte b_left;
- byte b_right;
- byte b_joy;
+ int b_up;
+ int b_down;
+ int b_left;
+ int b_right;
+ int b_joy;
  int joy_x;
  int joy_y;
 } pack;
