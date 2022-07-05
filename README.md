@@ -1,5 +1,5 @@
 # Remote Control for hobby models
-This is arduino project to add remote control to hobby models using ganarlly available components.
+This is arduino project to add remote control to hobby models using generally available components.
 
 This project consists of three main "parts":
 * Controller
@@ -15,19 +15,28 @@ To build controller you need following components:
 * nRF24l01 module
 * 9-volt battery
 * Nine-volt battery snap
+* DC-DC converter (from 9v to 5v)
 
 ### Software
 There are some configuration variables defined in the source code for tuning your controller.
 Other than that nothing special- just upload sketch to your uno board and you ready to go.
 
 ## Vehicle
-Not ready yet. There is some code, but it surely not working.
+[STL files](https://www.thingiverse.com/thing:5421100)
+### Hardware
+To build vehicle you will need following components:
+* Arduino micro
+* nRF24l01 module
+* 9-volt battery
+* Nine-volt battery snap
+* DC-DC converter (from 9v to 5v)
+* Arduino compatible DC motor board (or shield) 
+
+### Software
+Nothing special here- upload your sketch and you ready to go.
 
 ## Debugging
 ### Hardware
 To build debugging kit you need following components:
 * Arduino Uno
 * nRF24l01 module
-
-### Software
-Nothing special here- upload your sketch and you ready to go.
