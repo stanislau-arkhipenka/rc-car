@@ -22,6 +22,7 @@ Other than that nothing special- just upload sketch to your uno board and you re
 
 ## Vehicle
 Not ready yet. There is some code, but it surely not working.
+STL files can be found [here](https://www.thingiverse.com/thing:5421100)
 
 ## Debugging
 ### Hardware
