@@ -1,9 +1,10 @@
 # Remote Control for hobby models
 This is arduino project to add remote control to hobby models using generally available components.
 
-This project consists of three main "parts":
+This project consists of four main "parts":
 * Controller
-* Vehicle
+* rc_car_v1
+* rc_tank_v2
 * Debugging
 
 ## Controller
@@ -21,7 +22,8 @@ To build controller you need following components:
 There are some configuration variables defined in the source code for tuning your controller.
 Other than that nothing special- just upload sketch to your uno board and you ready to go.
 
-## Vehicle
+## RC Car v1
+Software to control RC Car
 [STL files](https://www.thingiverse.com/thing:5421100)
 ### Hardware
 To build vehicle you will need following components:
@@ -34,6 +36,10 @@ To build vehicle you will need following components:
 
 ### Software
 Nothing special here- upload your sketch and you ready to go.
+
+## RC Tank v2
+Software to control RC Tank, that is based on arduino.
+It was designed for [this tank](https://zzbot.org/projects/rc-tank-2/)
 
 ## Debugging
 ### Hardware
