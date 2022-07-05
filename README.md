@@ -22,8 +22,7 @@ There are some configuration variables defined in the source code for tuning you
 Other than that nothing special- just upload sketch to your uno board and you ready to go.
 
 ## Vehicle
-Not ready yet. There is some code, but it surely not working.
-STL files can be found [here](https://www.thingiverse.com/thing:5421100)
+[STL files](https://www.thingiverse.com/thing:5421100)
 ### Hardware
 To build vehicle you will need following components:
 * Arduino micro
