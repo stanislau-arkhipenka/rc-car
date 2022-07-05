@@ -1,5 +1,5 @@
 # Remote Control for hobby models
-This is arduino project to add remote control to hobby models using ganarlly available components.
+This is arduino project to add remote control to hobby models using generally available components.
 
 This project consists of three main "parts":
 * Controller
