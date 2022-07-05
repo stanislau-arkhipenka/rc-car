@@ -30,6 +30,7 @@ To build vehicle you will need following components:
 * 9-volt battery
 * Nine-volt battery snap
 * DC-DC converter (from 9v to 5v)
+* Arduino compatible DC motor board (or shield) 
 
 ### Software
 Nothing special here- upload your sketch and you ready to go.
