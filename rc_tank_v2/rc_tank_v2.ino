@@ -58,13 +58,16 @@ void setup()
   // --------------- CONFIGURE ESC --------------- 
   esc_left.attach(ESC_LEFT_PIN, ESC_MIN_W, ESC_MAX_W);
   esc_right.attach(ESC_RIGHT_PIN, ESC_MIN_W, ESC_MAX_W);
-  static int senter = int((ESC_MAX_W + ESC_MIN_W)/2);
 
-  // Enable watchdog 
+  led_delay(1500);
+
+  // --------------- CONFIGURE WATCHDOG --------------- 
   pinMode(DISABLE_WD_PIN, INPUT_PULLUP);
   if (digitalRead(DISABLE_WD_PIN) == HIGH) {
     wdt_enable(WDTO_2S);
     wd_enabled = true;
+  } else {
+    digitalWrite(LED_BUILTIN, HIGH);
   }
 }
 
@@ -73,19 +76,16 @@ void loop()
   //Read the data if available in buffer
   if (radio.available())
   {
-    digitalWrite(LED_BUILTIN, HIGH);
     while(radio.available())
     {
       radio.read(&pack, sizeof(pack));
     }
     
-    // do your stuff here
     int left_value = map(min(max(pack.joy_y + pack.joy_x, joy_max), -joy_max), -joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
     int right_value = map(min(max(pack.joy_y - pack.joy_x, joy_max), -joy_max),-joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
     esc_left.writeMicroseconds(left_value);
     esc_right.writeMicroseconds(right_value);
     
-    digitalWrite(LED_BUILTIN, LOW);
     if (wd_enabled == true) {
       wdt_reset();
     }
