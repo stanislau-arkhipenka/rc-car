@@ -3,6 +3,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <Servo.h> 
+#include <avr/wdt.h>
 
 //create an RF24 object
 RF24 radio(9, 8);  // CE, CSN
@@ -11,6 +12,10 @@ RF24 radio(9, 8);  // CE, CSN
 //address through which two modules communicate.
 const byte addresses[][6] = {"veh01","con01"};
 
+
+// TODO SELECT ANOTHER PIN!
+#define DISABLE_WD_PIN 13
+bool wd_enabled = false;
 
 // package structure
 struct c_pack {
@@ -54,6 +59,13 @@ void setup()
   esc_left.attach(ESC_LEFT_PIN, ESC_MIN_W, ESC_MAX_W);
   esc_right.attach(ESC_RIGHT_PIN, ESC_MIN_W, ESC_MAX_W);
   static int senter = int((ESC_MAX_W + ESC_MIN_W)/2);
+
+  // Enable watchdog 
+  pinMode(DISABLE_WD_PIN, INPUT_PULLUP);
+  if (digitalRead(DISABLE_WD_PIN) == HIGH) {
+    wdt_enable(WDTO_2S);
+    wd_enabled = true;
+  }
 }
 
 void loop()
@@ -74,6 +86,9 @@ void loop()
     esc_right.writeMicroseconds(right_value);
     
     digitalWrite(LED_BUILTIN, LOW);
+    if (wd_enabled == true) {
+      wdt_reset();
+    }
   }
 }
 
@@ -90,6 +105,9 @@ void led_delay(int t) {
     }
     on = !on;
     delay(step);
+    if (wd_enabled == true) {
+      wdt_reset();
+    }
   }
   digitalWrite(LED_BUILTIN, LOW);
 }
