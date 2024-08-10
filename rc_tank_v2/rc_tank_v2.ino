@@ -6,15 +6,16 @@
 #include <avr/wdt.h>
 
 //create an RF24 object
-RF24 radio(9, 8);  // CE, CSN
+RF24 radio(7, 8);  // CE, CSN
 #define RF_POWER RF24_PA_HIGH
+#define CHANNEL 0
 
 //address through which two modules communicate.
 const byte addresses[][6] = {"veh01","con01"};
 
 
 // TODO SELECT ANOTHER PIN!
-#define DISABLE_WD_PIN 13
+#define DISABLE_WD_PIN 2
 bool wd_enabled = false;
 
 // package structure
@@ -32,8 +33,8 @@ struct c_pack {
 #define joy_max 32 
 
 // ESC config
-#define ESC_LEFT_PIN 6  //    DIGITAL PWM
-#define ESC_RIGHT_PIN 9 //    DIGITAL PWM
+#define ESC_LEFT_PIN 5  //    DIGITAL PWM
+#define ESC_RIGHT_PIN 6 //    DIGITAL PWM
 #define ESC_MIN_W 1000 
 #define ESC_MAX_W 2000
 Servo esc_left;
@@ -44,6 +45,7 @@ void setup()
 {
   //---------------- DEBUG ---------------------------
   Serial.begin(9600);
+  Serial.println("Starting");
 
   // --------------- CONFIGURE RADIO --------------- 
   radio.begin();
@@ -51,7 +53,7 @@ void setup()
   //set the address
   radio.openWritingPipe(addresses[0]);   //write pipe as veh01
   radio.openReadingPipe(1,addresses[1]); //read pipe from con01
-  
+  radio.setChannel(CHANNEL);
   //Set module as receiver
   radio.startListening();
 
@@ -66,8 +68,10 @@ void setup()
   if (digitalRead(DISABLE_WD_PIN) == HIGH) {
     wdt_enable(WDTO_2S);
     wd_enabled = true;
+    Serial.println("Watchdog enabled");
   } else {
     digitalWrite(LED_BUILTIN, HIGH);
+    Serial.println("Watchdog disabled");
   }
 }
 
@@ -80,11 +84,14 @@ void loop()
     {
       radio.read(&pack, sizeof(pack));
     }
-    
-    int left_value = map(min(max(pack.joy_y + pack.joy_x, joy_max), -joy_max), -joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
-    int right_value = map(min(max(pack.joy_y - pack.joy_x, joy_max), -joy_max),-joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
+    int left_value = map(max(min(pack.joy_y + pack.joy_x, joy_max), -joy_max), -joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
+    int right_value = map(max(min(pack.joy_y - pack.joy_x, joy_max), -joy_max),-joy_max, joy_max, ESC_MIN_W, ESC_MAX_W);
     esc_left.writeMicroseconds(left_value);
     esc_right.writeMicroseconds(right_value);
+    Serial.print(left_value);
+    Serial.print(" ");
+    Serial.print(right_value);
+    Serial.println("");
     
     if (wd_enabled == true) {
       wdt_reset();
